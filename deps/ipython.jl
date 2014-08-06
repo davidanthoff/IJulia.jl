@@ -2,7 +2,7 @@
 # IPython executable, and version is the VersionNumber.
 function find_ipython()    
     if @windows? true : false
-        ipython = normpath(Pkg.dir("IJulia"),"usr", "python27", "scripts", "ipython.exe")
+        ipython = normpath(Pkg.dir("IJulia"),"deps", "usr", "python27", "scripts", "ipython.exe")
         try
             ipython,convert(VersionNumber, chomp(readall(`$ipython --version`)))
         catch e5
