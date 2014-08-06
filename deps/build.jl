@@ -3,7 +3,7 @@ eprintln(x...) = println(STDERR, x...)
 
 if @windows? true : false
     downloadsdir = "downloads"
-    pyinstalldir = "$(pwd())\\usr\\python3"
+    pyinstalldir = "$(pwd())\\usr\\python27"
     ijuliaprofiledir = "$(pwd())\\usr\\.ijulia"
     ipython = "$pyinstalldir\\scripts\\ipython.exe"
     scriptsdir = "usr\\scripts"
@@ -13,11 +13,8 @@ if @windows? true : false
     end
     download("https://www.python.org/ftp/python/2.7.8/python-2.7.8.msi", "$downloadsdir\\python-2.7.8.msi")
     download("https://bootstrap.pypa.io/get-pip.py", "$downloadsdir\\get-pip.py")
-
     
     run(`msiexec /passive /quiet /a downloads\\python-2.7.8.msi TARGETDIR="$pyinstalldir"`)
-
-    download("https://www.dropbox.com/sh/xsel6zzi92ytfte/AAADUuCr-W3SZP3D3TYGGVbfa/msvcr100.dll", pyinstalldir)
 
     run(`$pyinstalldir\\python.exe downloads\\get-pip.py`)
     run(`$pyinstalldir\\scripts\\pip.exe install pyzmq`)
