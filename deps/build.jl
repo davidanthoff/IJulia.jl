@@ -1,9 +1,43 @@
+# print to stderr, since that is where Pkg prints its messages
+eprintln(x...) = println(STDERR, x...)
+
+if @windows? true : false
+    downloadsdir = "downloads"
+    pyinstalldir = "$(pwd())\\usr\\python3"
+    ijuliaprofiledir = "$(pwd())\\usr\\.ijulia"
+    ipython = "$pyinstalldir\\scripts\\ipython.exe"
+    scriptsdir = "usr\\scripts"
+
+    if !ispath(downloadsdir)
+        mkdir(downloadsdir)
+    end
+    download("https://www.python.org/ftp/python/3.4.1/python-3.4.1.msi", "$downloadsdir\\python-3.4.1.msi")
+    download("https://bootstrap.pypa.io/get-pip.py", "$downloadsdir\\get-pip.py")
+
+    
+    run(`msiexec /passive /quiet /a downloads\\python-3.4.1.msi TARGETDIR="$pyinstalldir"`)
+
+    run(`$pyinstalldir\\python.exe downloads\\get-pip.py`)
+    run(`$pyinstalldir\\scripts\\pip.exe install pyzmq`)
+    run(`$pyinstalldir\\scripts\\pip.exe install Jinja2`)
+    run(`$pyinstalldir\\scripts\\pip.exe install tornado`)
+    run(`$pyinstalldir\\scripts\\pip.exe install ipython`)
+
+    run(`$ipython profile create --ipython-dir="$ijuliaprofiledir"`)
+
+    juliaprof = chomp(readall(`$ipython locate profile --ipython-dir="$ijuliaprofiledir"`))
+    
+    if !ispath(scriptsdir)
+        mkdir(scriptsdir)
+    end
+    f = open("$scriptsdir\\ijulia.bat","w")
+    write(f, "$ipython notebook --ipython-dir=$ijuliaprofiledir")
+    close(f)
+else
+
 # TODO: Build IPython 1.0 dependency? (wait for release?)
 
 #######################################################################
-
-# print to stderr, since that is where Pkg prints its messages
-eprintln(x...) = println(STDERR, x...)
 
 include("ipython.jl")
 const ipython, ipyvers = find_ipython()
@@ -22,7 +56,7 @@ eprintln("Creating julia profile in IPython...")
 run(`$ipython profile create julia`)
 
 juliaprof = chomp(readall(`$ipython locate profile julia`))
-
+end
 # set c.$s in prof file to val, or nothing if it is already set
 # unless overwrite is true
 function add_config(prof::String, s::String, val, overwrite=false)
