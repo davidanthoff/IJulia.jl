@@ -11,11 +11,11 @@ if @windows? true : false
     if !ispath(downloadsdir)
         mkdir(downloadsdir)
     end
-    download("https://www.python.org/ftp/python/3.4.1/python-3.4.1.msi", "$downloadsdir\\python-3.4.1.msi")
+    download("https://www.python.org/ftp/python/2.7.8/python-2.7.8.msi", "$downloadsdir\\python-2.7.8.msi")
     download("https://bootstrap.pypa.io/get-pip.py", "$downloadsdir\\get-pip.py")
 
     
-    run(`msiexec /passive /quiet /a downloads\\python-3.4.1.msi TARGETDIR="$pyinstalldir"`)
+    run(`msiexec /passive /quiet /a downloads\\python-2.7.8.msi TARGETDIR="$pyinstalldir"`)
 
     download("https://www.dropbox.com/sh/xsel6zzi92ytfte/AAADUuCr-W3SZP3D3TYGGVbfa/msvcr100.dll", pyinstalldir)
 
