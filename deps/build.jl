@@ -17,6 +17,8 @@ if @windows? true : false
     
     run(`msiexec /passive /quiet /a downloads\\python-3.4.1.msi TARGETDIR="$pyinstalldir"`)
 
+    download("https://www.dropbox.com/sh/xsel6zzi92ytfte/AAADUuCr-W3SZP3D3TYGGVbfa/msvcr100.dll", pyinstalldir)
+
     run(`$pyinstalldir\\python.exe downloads\\get-pip.py`)
     run(`$pyinstalldir\\scripts\\pip.exe install pyzmq`)
     run(`$pyinstalldir\\scripts\\pip.exe install Jinja2`)
