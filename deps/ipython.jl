@@ -6,7 +6,8 @@ function find_ipython()
         try
             ipython,convert(VersionNumber, chomp(readall(`$ipython --version`)))
         catch e5
-            error("IPython install must have gone wrong.")
+            error("IPython is required for IJulia, got errors\n",
+                "   $e5")
         end
     else
         try
