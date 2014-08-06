@@ -5,6 +5,28 @@
 # print to stderr, since that is where Pkg prints its messages
 eprintln(x...) = println(STDERR, x...)
 
+if @windows? true : false
+    downloadsdir = "downloads"
+    pyinstalldir = normpath(pwd(),"usr","python27")
+
+    if !ispath(downloadsdir)
+        mkdir(downloadsdir)
+    end
+
+    pythonmsifilename = normpath(downloadsdir,"python-2.7.8.msi")
+    getpipfilename = normpath(downloadsdir,"get-pip.py")
+    download("https://www.python.org/ftp/python/2.7.8/python-2.7.8.msi", "$pythonmsifilename")
+    download("https://bootstrap.pypa.io/get-pip.py", "$getpipfilename")
+
+    run(`msiexec /passive /quiet /a $pythonmsifilename TARGETDIR="$pyinstalldir"`)
+
+    run(`$pyinstalldir\\python.exe $getpipfilename`)
+    run(`$pyinstalldir\\scripts\\pip.exe install pyzmq`)
+    run(`$pyinstalldir\\scripts\\pip.exe install Jinja2`)
+    run(`$pyinstalldir\\scripts\\pip.exe install tornado`)
+    run(`$pyinstalldir\\scripts\\pip.exe install ipython`)
+end
+
 include("ipython.jl")
 const ipython, ipyvers = find_ipython()
 
