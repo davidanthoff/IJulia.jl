@@ -22,17 +22,18 @@ if @windows? true : false
     run(`$pyinstalldir\\scripts\\pip.exe install tornado`)
     run(`$pyinstalldir\\scripts\\pip.exe install ipython`)
 
-    run(`$ipython profile create --ipython-dir="$ijuliaprofiledir"`)
+    #run(`$ipython profile create --ipython-dir="$ijuliaprofiledir"`)
 
-    juliaprof = chomp(readall(`$ipython locate profile --ipython-dir="$ijuliaprofiledir"`))
+    #juliaprof = chomp(readall(`$ipython locate profile --ipython-dir="$ijuliaprofiledir"`))
     
     if !ispath(scriptsdir)
         mkdir(scriptsdir)
     end
     f = open("$scriptsdir\\ijulia.bat","w")
-    write(f, "$ipython notebook --ipython-dir=$ijuliaprofiledir")
+    #write(f, "$ipython notebook --ipython-dir=$ijuliaprofiledir")
+    write(f, "$ipython notebook --profile=julia")
     close(f)
-else
+end
 
 # TODO: Build IPython 1.0 dependency? (wait for release?)
 
@@ -55,7 +56,7 @@ eprintln("Creating julia profile in IPython...")
 run(`$ipython profile create julia`)
 
 juliaprof = chomp(readall(`$ipython locate profile julia`))
-end
+
 # set c.$s in prof file to val, or nothing if it is already set
 # unless overwrite is true
 function add_config(prof::String, s::String, val, overwrite=false)
