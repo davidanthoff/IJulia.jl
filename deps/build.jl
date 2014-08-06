@@ -5,7 +5,7 @@ if @windows? true : false
     downloadsdir = "downloads"
     pyinstalldir = "$(pwd())\\usr\\python27"
     ijuliaprofiledir = "$(pwd())\\usr\\.ijulia"
-    ipython = "$pyinstalldir\\scripts\\ipython.exe"
+    #ipython = "$pyinstalldir\\scripts\\ipython.exe"
     scriptsdir = "usr\\scripts"
 
     if !ispath(downloadsdir)
@@ -26,13 +26,13 @@ if @windows? true : false
 
     #juliaprof = chomp(readall(`$ipython locate profile --ipython-dir="$ijuliaprofiledir"`))
     
-    if !ispath(scriptsdir)
-        mkdir(scriptsdir)
-    end
-    f = open("$scriptsdir\\ijulia.bat","w")
+    #if !ispath(scriptsdir)
+    #    mkdir(scriptsdir)
+    #end
+    #f = open("$scriptsdir\\ijulia.bat","w")
     #write(f, "$ipython notebook --ipython-dir=$ijuliaprofiledir")
-    write(f, "$ipython notebook --profile=julia")
-    close(f)
+    #write(f, "$ipython notebook --profile=julia")
+    #close(f)
 end
 
 # TODO: Build IPython 1.0 dependency? (wait for release?)
