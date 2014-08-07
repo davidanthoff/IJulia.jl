@@ -1,4 +1,4 @@
 *.pyc
 /build/
-deps/downloads
-deps/usr
+/deps/downloads
+/deps/usr
