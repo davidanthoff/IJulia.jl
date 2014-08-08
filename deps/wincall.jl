@@ -25,7 +25,25 @@ immutable STARTUPINFO
     hStdInput::HANDLE
     hStdOutput::HANDLE
     hStdError::HANDLE
-    STARTUPINFO() = new()
+    STARTUPINFO() = new(
+        sizeof(STARTUPINFO),
+        C_NULL,
+        C_NULL,
+        C_NULL,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        C_NULL,
+        C_NULL,
+        C_NULL,
+        C_NULL)
 end
  
 immutable PROCESS_INFORMATION
@@ -43,7 +61,7 @@ CreateProcess(cmd) = begin
          (Ptr{Cwchar_t}, Ptr{Cwchar_t}, Ptr{Int}, Ptr{Int}, Cchar, Int64,
           Ptr{Uint8}, Ptr{Uint8}, Ptr{PROCESS_INFORMATION}, Ptr{STARTUPINFO}),
          C_NULL,
-         utf16(cmd),
+         wstring(cmd),
          C_NULL,
          C_NULL,
          0,
