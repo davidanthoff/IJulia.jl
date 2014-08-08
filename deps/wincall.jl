@@ -1,10 +1,11 @@
 const INFINITE = 0xFFFFFFFF
 
 typealias HANDLE Ptr{Void}
-typealias DWORD Uint32
-typealias WORD Uint16
-typealias LPTSTR Cwchar_t
-typealias LPBYTE Ptr{Char}
+typealias DWORD Culong
+typealias WORD Cushort
+typealias LPCTSTR Ptr{Cwchar_t}
+typealias LPTSTR Ptr{Cwchar_t}
+typealias LPBYTE Ptr{Cuchar}
  
 immutable STARTUPINFO
     cb::DWORD
@@ -55,11 +56,11 @@ immutable PROCESS_INFORMATION
 end
  
 CreateProcess(cmd) = begin
-    si = [STARTUPINFO()]
-    pi = [PROCESS_INFORMATION()]
-    ccall(:CreateProcessW, Cchar,
-         (Ptr{Cwchar_t}, Ptr{Cwchar_t}, Ptr{Int}, Ptr{Int}, Cchar, Int64,
-          Ptr{Uint8}, Ptr{Uint8}, Ptr{PROCESS_INFORMATION}, Ptr{STARTUPINFO}),
+    si = STARTUPINFO[STARTUPINFO()]
+    pi = PROCESS_INFORMATION[PROCESS_INFORMATION()]
+    ccall(:CreateProcessW, Cint,
+         (LPCTSTR, LPTSTR , Ptr{Int}, Ptr{Int}, Cint, DWORD,
+          Ptr{Void}, LPCTSTR, Ptr{PROCESS_INFORMATION}, Ptr{STARTUPINFO}),
          C_NULL,
          wstring(cmd),
          C_NULL,
