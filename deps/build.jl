@@ -23,11 +23,12 @@ if @windows? true : false
         error("Python setup failed with error code $retcode.")
     end
 
-    run(`$pyinstalldir\\python.exe $getpipfilename`)
-    run(`$pyinstalldir\\scripts\\pip.exe install pyzmq`)
-    run(`$pyinstalldir\\scripts\\pip.exe install Jinja2`)
-    run(`$pyinstalldir\\scripts\\pip.exe install tornado`)
-    run(`$pyinstalldir\\scripts\\pip.exe install ipython`)
+    pythonexepath = normpath(pyinstalldir,"python.exe")
+    run(`$pythonexepath $getpipfilename`)
+    run(`$pythonexepath -m pip install pyzmq`)
+    run(`$pythonexepath -m pip install Jinja2`)
+    run(`$pythonexepath -m pip install tornado`)
+    run(`$pythonexepath -m pip install ipython`)
 end
 
 include("ipython.jl")
