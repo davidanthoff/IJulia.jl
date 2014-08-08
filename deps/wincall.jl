@@ -49,8 +49,8 @@ CreateProcess(cmd) = begin
          0,
          0,
          C_NULL, C_NULL,
-         convert(Ptr{PROCESS_INFORMATION}, pointer(pi)),
-         convert(Ptr{STARTUPINFO}, pointer(pi)))
+         convert(Ptr{STARTUPINFO}, pointer(si)),
+         convert(Ptr{PROCESS_INFORMATION}, pointer(pi)))
 
     ccall(:WaitForSingleObject, Cuint, (Cuint,Cuint), pi[1].hProcess, INFINITE)
 end
