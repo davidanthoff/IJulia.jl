@@ -1,3 +1,4 @@
+include("wincall.jl")
 # TODO: Build IPython 1.0 dependency? (wait for release?)
 
 #######################################################################
@@ -6,7 +7,7 @@
 eprintln(x...) = println(STDERR, x...)
 
 if @windows? true : false
-    include("wincall.jl")
+    
 
     downloadsdir = "downloads"
     pyinstalldir = normpath(pwd(),"usr","python34")
@@ -26,28 +27,28 @@ if @windows? true : false
     const MSIDBOPEN_CREATE = 3
     const MSIDBOPEN_CREATEDIRECT = 4
 
-    msiDatabaseHandle = Cuint[0]
-    retcode = ccall((:MsiOpenDatabaseW, "msi.dll"), Cuint, (Ptr{Cwchar_t}, Cuint, Ptr{Cuint}), wstring(pythonmsifilename), MSIDBOPEN_DIRECT, msiDatabaseHandle)
+    msiDatabaseHandle = MSIHANDLE[0]
+    retcode = ccall((:MsiOpenDatabaseW, "msi.dll"), Cuint, (LPCTSTR, Cuint, Ptr{MSIHANDLE}), wstring(pythonmsifilename), MSIDBOPEN_DIRECT, msiDatabaseHandle)
     retcode!=0 && error("Error MsiOpenDatabaseW: $retcode")
     try
-        msiViewHandle = Cuint[0]
-        retcode = ccall((:MsiDatabaseOpenViewW, "msi.dll"), Cuint, (Cuint, Ptr{Cwchar_t}, Ptr{Cuint}), msiDatabaseHandle[1], wstring("UPDATE `Feature` SET `Feature`.`Level`=1 WHERE `Feature`.`Feature`='PrivateCRT'"), msiViewHandle)
+        msiViewHandle = MSIHANDLE[0]
+        retcode = ccall((:MsiDatabaseOpenViewW, "msi.dll"), Cuint, (MSIHANDLE, LPCTSTR, Ptr{MSIHANDLE}), msiDatabaseHandle[1], wstring("UPDATE `Feature` SET `Feature`.`Level`=1 WHERE `Feature`.`Feature`='PrivateCRT'"), msiViewHandle)
         retcode!=0 && error("Error MsiDatabaseOpenViewW")
         try
-            retcode = ccall((:MsiViewExecute, "msi.dll"), Cuint, (Cuint,Cuint), msiViewHandle[1],0)
+            retcode = ccall((:MsiViewExecute, "msi.dll"), Cuint, (MSIHANDLE,Cuint), msiViewHandle[1],0)
             retcode!=0 && error("Error MsiViewExecute")
 
-            retcode = ccall((:MsiViewClose, "msi.dll"), Cuint, (Cuint, ), msiViewHandle[1])
+            retcode = ccall((:MsiViewClose, "msi.dll"), Cuint, (MSIHANDLE, ), msiViewHandle[1])
             retcode!=0 && error("Error MsiViewClose")
 
-            retcode = ccall((:MsiDatabaseCommit, "msi.dll"), Cuint, (Cuint,), msiDatabaseHandle[1]);
+            retcode = ccall((:MsiDatabaseCommit, "msi.dll"), Cuint, (MSIHANDLE,), msiDatabaseHandle[1]);
             retcode!=0 && error("Error MsiDatabaseCommit")
         finally
-            retcode = ccall((:MsiCloseHandle, "msi.dll"), Cuint, (Cuint,), msiViewHandle[1]);
+            retcode = ccall((:MsiCloseHandle, "msi.dll"), Cuint, (MSIHANDLE,), msiViewHandle[1]);
             retcode!=0 && error("Error MsiCloseHandle")
         end
     finally
-        retcode = ccall((:MsiCloseHandle, "msi.dll"), Cuint, (Cuint,), msiDatabaseHandle[1]);
+        retcode = ccall((:MsiCloseHandle, "msi.dll"), Cuint, (MSIHANDLE,), msiDatabaseHandle[1]);
         retcode!=0 && error("Error MsiCloseHandle")
     end
 

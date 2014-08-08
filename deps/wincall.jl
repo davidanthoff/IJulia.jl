@@ -6,6 +6,7 @@ typealias WORD Cushort
 typealias LPCTSTR Ptr{Cwchar_t}
 typealias LPTSTR Ptr{Cwchar_t}
 typealias LPBYTE Ptr{Cuchar}
+typealias MSIHANDLE Culong
  
 immutable STARTUPINFO
     cb::DWORD
