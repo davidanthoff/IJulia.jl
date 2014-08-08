@@ -2,7 +2,7 @@
 # IPython executable, and version is the VersionNumber.
 function find_ipython()
     if @windows? true : false
-        ipycmds = (normpath(Pkg.dir("IJulia"),"deps", "usr", "python27", "scripts", "ipython.exe"),)
+        ipycmds = (normpath(Pkg.dir("IJulia"),"deps", "usr", "python34", "scripts", "ipython.exe"),)
     else
         ipycmds = ("ipython", "ipython2", "ipython3")
     end

@@ -6,22 +6,52 @@
 eprintln(x...) = println(STDERR, x...)
 
 if @windows? true : false
+    include("wincall.jl")
+
     downloadsdir = "downloads"
-    pyinstalldir = normpath(pwd(),"usr","python27")
+    pyinstalldir = normpath(pwd(),"usr","python34")
 
     if !ispath(downloadsdir)
         mkdir(downloadsdir)
     end
 
-    pythonmsifilename = normpath(downloadsdir,"python-2.7.8.msi")
+    pythonmsifilename = normpath(downloadsdir,"python-3.4.1.msi")
     getpipfilename = normpath(downloadsdir,"get-pip.py")
-    download("https://www.python.org/ftp/python/2.7.8/python-2.7.8.msi", "$pythonmsifilename")
+    download("https://www.python.org/ftp/python/3.4.1/python-3.4.1.msi", "$pythonmsifilename")
     download("https://bootstrap.pypa.io/get-pip.py", "$getpipfilename")
 
-    retcode = ccall((:MsiInstallProductW,"msi.dll"), Cuint, (Ptr{Cwchar_t},Ptr{Cwchar_t}), wstring(pythonmsifilename), wstring("ACTION=ADMIN TARGETDIR=\"$pyinstalldir\""))
-    if retcode!=0
-        error("Python setup failed with error code $retcode.")
+    const MSIDBOPEN_READONLY = 0
+    const MSIDBOPEN_TRANSACT = 1
+    const MSIDBOPEN_DIRECT = 2
+    const MSIDBOPEN_CREATE = 3
+    const MSIDBOPEN_CREATEDIRECT = 4
+
+    msiDatabaseHandle = Cuint[0]
+    retcode = ccall((:MsiOpenDatabaseW, "msi.dll"), Cuint, (Ptr{Cwchar_t}, Cuint, Ptr{Cuint}), wstring(pythonmsifilename), MSIDBOPEN_DIRECT, msiDatabaseHandle)
+    retcode!=0 && error("Error MsiOpenDatabaseW: $retcode")
+    try
+        msiViewHandle = Cuint[0]
+        retcode = ccall((:MsiDatabaseOpenViewW, "msi.dll"), Cuint, (Cuint, Ptr{Cwchar_t}, Ptr{Cuint}), msiDatabaseHandle[1], wstring("UPDATE `Feature` SET `Feature`.`Level`=1 WHERE `Feature`.`Feature`='PrivateCRT'"), msiViewHandle)
+        retcode!=0 && error("Error MsiDatabaseOpenViewW")
+        try
+            retcode = ccall((:MsiViewExecute, "msi.dll"), Cuint, (Cuint,Cuint), msiViewHandle[1],0)
+            retcode!=0 && error("Error MsiViewExecute")
+
+            retcode = ccall((:MsiViewClose, "msi.dll"), Cuint, (Cuint, ), msiViewHandle[1])
+            retcode!=0 && error("Error MsiViewClose")
+
+            retcode = ccall((:MsiDatabaseCommit, "msi.dll"), Cuint, (Cuint,), msiDatabaseHandle[1]);
+            retcode!=0 && error("Error MsiDatabaseCommit")
+        finally
+            retcode = ccall((:MsiCloseHandle, "msi.dll"), Cuint, (Cuint,), msiViewHandle[1]);
+            retcode!=0 && error("Error MsiCloseHandle")
+        end
+    finally
+        retcode = ccall((:MsiCloseHandle, "msi.dll"), Cuint, (Cuint,), msiDatabaseHandle[1]);
+        retcode!=0 && error("Error MsiCloseHandle")
     end
+
+    CreateProcess("msiexec /passive /quiet /a $pythonmsifilename TARGETDIR=\"$pyinstalldir\"")
 
     pythonexepath = normpath(pyinstalldir,"python.exe")
     run(`$pythonexepath $getpipfilename`)
