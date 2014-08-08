@@ -28,7 +28,7 @@ if @windows? true : false
     const MSIDBOPEN_CREATEDIRECT = 4
 
     msiDatabaseHandle = MSIHANDLE[0]
-    retcode = ccall((:MsiOpenDatabaseW, "msi.dll"), Cuint, (LPCTSTR, Cuint, Ptr{MSIHANDLE}), wstring(pythonmsifilename), MSIDBOPEN_DIRECT, msiDatabaseHandle)
+    retcode = ccall((:MsiOpenDatabaseW, "msi.dll"), Cuint, (LPCTSTR, Cuint, Ptr{MSIHANDLE}), wstring(pythonmsifilename), MSIDBOPEN_TRANSACT, msiDatabaseHandle)
     retcode!=0 && error("Error MsiOpenDatabaseW: $retcode")
     try
         msiViewHandle = MSIHANDLE[0]
