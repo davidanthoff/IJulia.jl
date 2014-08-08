@@ -18,7 +18,10 @@ if @windows? true : false
     download("https://www.python.org/ftp/python/2.7.8/python-2.7.8.msi", "$pythonmsifilename")
     download("https://bootstrap.pypa.io/get-pip.py", "$getpipfilename")
 
-    run(`msiexec /passive /quiet /a $pythonmsifilename TARGETDIR="$pyinstalldir"`)
+    retcode = ccall((:MsiInstallProductW,"msi.dll"), Cuint, (Ptr{Cwchar_t},Ptr{Cwchar_t}), wstring(pythonmsifilename), wstring("ACTION=ADMIN TARGETDIR=\"$pyinstalldir\""))
+    if retcode!=0
+        error("Python setup failed with error code $retcode.")
+    end
 
     run(`$pyinstalldir\\python.exe $getpipfilename`)
     run(`$pyinstalldir\\scripts\\pip.exe install pyzmq`)
