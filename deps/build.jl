@@ -48,8 +48,8 @@ juliaprof = chomp(readall(`$ipython locate profile julia`))
 
 # set c.$s in prof file to val, or nothing if it is already set
 # unless overwrite is true
-function add_config(prof::String, s::String, val, overwrite=false)
-    p = joinpath(juliaprof, prof)
+function add_config(profdir::String, prof::String, s::String, val, overwrite=false)
+    p = joinpath(profdir, prof)
     r = Regex(string("^[ \\t]*c\\.", replace(s, r"\.", "\\."), "\\s*=.*\$"), "m")
     if isfile(p)
         c = readall(p)
@@ -92,21 +92,21 @@ if VERSION >= v"0.3-"
 else
     binary_name = "julia-basic"
 end
-add_config("ipython_config.py", "KernelManager.kernel_cmd",
+add_config(juliaprof, "ipython_config.py", "KernelManager.kernel_cmd",
            VERSION >= v"0.3"?
             """["$(escape_string(joinpath(JULIA_HOME,(@windows? "julia.exe":"$binary_name"))))", "-i", "-F", "$(escape_string(joinpath(Pkg.dir("IJulia"),"src","kernel.jl")))", "{connection_file}"]""":
             """["$(escape_string(joinpath(JULIA_HOME,(@windows? "julia.bat":"$binary_name"))))", "-F", "$(escape_string(joinpath(Pkg.dir("IJulia"),"src","kernel.jl")))", "{connection_file}"]""",
            true)
 
 # make qtconsole require shift-enter to complete input
-add_config("ipython_qtconsole_config.py",
+add_config(juliaprof, "ipython_qtconsole_config.py",
            "IPythonWidget.execute_on_complete_input", "False")
 
-add_config("ipython_qtconsole_config.py",
+add_config(juliaprof, "ipython_qtconsole_config.py",
            "FrontendWidget.lexer_class", "'pygments.lexers.JuliaLexer'")
 
 # set Julia notebook to use a different port than IPython's 8888 by default
-add_config("ipython_notebook_config.py", "NotebookApp.port", 8998)
+add_config(juliaprof, "ipython_notebook_config.py", "NotebookApp.port", 8998)
 
 #######################################################################
 # Copying files into the correct paths in the profile lets us override
