@@ -1,6 +1,6 @@
 # return (ipython, version) tuple, where ipython is the string of the
 # IPython executable, and version is the VersionNumber.
-function find_system_ipython()
+function find_ipython()
     ipycmds = ("ipython", "ipython2", "ipython3")
 
     for ipy in ipycmds

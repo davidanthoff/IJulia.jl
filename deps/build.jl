@@ -11,7 +11,8 @@ if @windows? true : false
     downloadsdir = "downloads"
     pyinstalldir = normpath(pwd(),"usr","python34")
 
-    if !ispath(downloadsdir)
+    if ispath(downloadsdir)
+        run(`cmd /C RD "$(normpath(pwd(),downloadsdir))" /S /Q`)
         mkdir(downloadsdir)
     end
 
@@ -26,11 +27,15 @@ if @windows? true : false
     run(`$minicondafilename /AddToPath=0 /RegisterPython=0 /InstallationType=JustMe /S /D=$pyinstalldir`)
 
     pythonexepath = normpath(pyinstalldir,"python.exe")
+
+    piperrorlogfile = normpath(pwd(),"usr","logs","piperrorlog.txt")
+    piplogfile = normpath(pwd(),"usr","logs","piplog.txt")
+    mkdir(normpath(pwd(),"usr","logs"))
     run(`$pythonexepath $getpipfilename`)
-    run(`$pythonexepath -m pip install pyzmq`)
-    run(`$pythonexepath -m pip install Jinja2`)
-    run(`$pythonexepath -m pip install tornado`)
-    run(`$pythonexepath -m pip install ipython`)
+    run(`$pythonexepath -m pip install -qqq --log-file $piperrorlogfile --log $piplogfile pyzmq==14.4.1`)
+    run(`$pythonexepath -m pip install -qqq --log-file $piperrorlogfile --log $piplogfile Jinja2==2.7.3`)
+    run(`$pythonexepath -m pip install -qqq --log-file $piperrorlogfile --log $piplogfile tornado==4.0.2`)
+    run(`$pythonexepath -m pip install -qqq --log-file $piperrorlogfile --log $piplogfile ipython==2.3.1`)
 
     ijuliaprofiledir = "$(pwd())\\usr\\.ijulia"
     ipythonexepath = "$pyinstalldir\\scripts\\ipython.exe"
