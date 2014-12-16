@@ -1,4 +1,3 @@
-include("wincall.jl")
 # TODO: Build IPython 1.0 dependency? (wait for release?)
 
 #######################################################################
@@ -7,8 +6,6 @@ include("wincall.jl")
 eprintln(x...) = println(STDERR, x...)
 
 if @windows? true : false
-    
-
     downloadsdir = "downloads"
     pyinstalldir = normpath(pwd(),"usr","python34")
 
@@ -16,43 +13,12 @@ if @windows? true : false
         mkdir(downloadsdir)
     end
 
-    pythonmsifilename = normpath(downloadsdir,"python-3.4.1.msi")
+    minicondafilename = normpath(downloadsdir,"Miniconda3-3.7.0-Windows-x86.exe")
     getpipfilename = normpath(downloadsdir,"get-pip.py")
-    download("https://www.python.org/ftp/python/3.4.1/python-3.4.1.msi", "$pythonmsifilename")
+    download("http://repo.continuum.io/miniconda/Miniconda3-3.7.0-Windows-x86.exe", "$minicondafilename")
     download("https://bootstrap.pypa.io/get-pip.py", "$getpipfilename")
 
-    const MSIDBOPEN_READONLY = 0
-    const MSIDBOPEN_TRANSACT = 1
-    const MSIDBOPEN_DIRECT = 2
-    const MSIDBOPEN_CREATE = 3
-    const MSIDBOPEN_CREATEDIRECT = 4
-
-    msiDatabaseHandle = MSIHANDLE[0]
-    retcode = ccall((:MsiOpenDatabaseW, "msi.dll"), Cuint, (LPCTSTR, Cuint, Ptr{MSIHANDLE}), wstring(pythonmsifilename), MSIDBOPEN_TRANSACT, msiDatabaseHandle)
-    retcode!=0 && error("Error MsiOpenDatabaseW: $retcode")
-    try
-        msiViewHandle = MSIHANDLE[0]
-        retcode = ccall((:MsiDatabaseOpenViewW, "msi.dll"), Cuint, (MSIHANDLE, LPCTSTR, Ptr{MSIHANDLE}), msiDatabaseHandle[1], wstring("UPDATE `Feature` SET `Feature`.`Level`=1 WHERE `Feature`.`Feature`='PrivateCRT'"), msiViewHandle)
-        retcode!=0 && error("Error MsiDatabaseOpenViewW")
-        try
-            retcode = ccall((:MsiViewExecute, "msi.dll"), Cuint, (MSIHANDLE,Cuint), msiViewHandle[1],0)
-            retcode!=0 && error("Error MsiViewExecute")
-
-            retcode = ccall((:MsiViewClose, "msi.dll"), Cuint, (MSIHANDLE, ), msiViewHandle[1])
-            retcode!=0 && error("Error MsiViewClose")
-
-            retcode = ccall((:MsiDatabaseCommit, "msi.dll"), Cuint, (MSIHANDLE,), msiDatabaseHandle[1]);
-            retcode!=0 && error("Error MsiDatabaseCommit")
-        finally
-            retcode = ccall((:MsiCloseHandle, "msi.dll"), Cuint, (MSIHANDLE,), msiViewHandle[1]);
-            retcode!=0 && error("Error MsiCloseHandle")
-        end
-    finally
-        retcode = ccall((:MsiCloseHandle, "msi.dll"), Cuint, (MSIHANDLE,), msiDatabaseHandle[1]);
-        retcode!=0 && error("Error MsiCloseHandle")
-    end
-
-    CreateProcess("msiexec /passive /quiet /a $pythonmsifilename TARGETDIR=\"$pyinstalldir\"")
+    run(`$minicondafilename /AddToPath=0 /RegisterPython=0 /InstallationType=JustMe /S /D=$pyinstalldir`)
 
     pythonexepath = normpath(pyinstalldir,"python.exe")
     run(`$pythonexepath $getpipfilename`)
