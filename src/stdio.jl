@@ -19,25 +19,26 @@ macro verror_show(e, bt)
     end
 end
 
-function send_stream(s::String, name::String)
-    if !isempty(s)
+function send_stream(rd::IO, name::AbstractString)
+    nb = nb_available(rd)
+    if nb > 0
+        d = readbytes(rd, nb)
+        s = try
+            bytestring(d)
+        catch
+            # FIXME: what should we do here?
+            string("<ERROR: invalid UTF8 data ", d, ">")
+        end
         send_ipython(publish,
                      msg_pub(execute_msg, "stream",
-                             ["name" => name, "data" => s]))
+                             @compat Dict("name" => name, "data" => s)))
     end
 end
 
-function watch_stream(rd::IO, name::String)
+function watch_stream(rd::IO, name::AbstractString)
     try
         while !eof(rd) # blocks until something is available
-            d = readbytes(rd, nb_available(rd))
-            s = try
-                bytestring(d)
-            catch
-                # FIXME: what should we do here?
-                string("<ERROR: invalid UTF8 data ", d, ">")
-            end
-	    send_stream(s, name)
+            send_stream(rd, name)
             sleep(0.1) # a little delay to accumulate output
         end
     catch e
@@ -63,7 +64,7 @@ function readline(io::Base.Pipe)
         end
         send_ipython(raw_input,
                      msg_reply(execute_msg, "input_request",
-                               ["prompt" => "STDIN> "]))
+                               @compat Dict("prompt" => "STDIN> ")))
         while true
             msg = recv_ipython(raw_input)
             if msg.header["msg_type"] == "input_reply"
@@ -79,7 +80,9 @@ end
 
 function watch_stdio()
     @async watch_stream(read_stdout, "stdout")
-    @async watch_stream(read_stderr, "stderr")
+    if capture_stderr
+        @async watch_stream(read_stderr, "stderr")
+    end
 end
 
 import Base.flush
@@ -88,8 +91,8 @@ function flush(io::Base.Pipe)
     # send any available bytes to IPython (don't use readavailable,
     # since we don't want to block).
     if io == STDOUT
-        send_stream(takebuf_string(read_stdout.buffer), "stdout")
+        send_stream(read_stdout, "stdout")
     elseif io == STDERR
-        send_stream(takebuf_string(read_stderr.buffer), "stderr")
+        send_stream(read_stderr, "stderr")
     end
 end

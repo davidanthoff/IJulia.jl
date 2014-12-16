@@ -1,10 +1,14 @@
 module IJulia
+using Compat
 
 # in the IPython front-end, enable verbose output via IJulia.set_verbose()
 verbose = false
 function set_verbose(v=true)
     global verbose::Bool = v
 end
+
+# set this to false for debugging, to disable stderr redirection
+const capture_stderr = true
 
 using ZMQ
 using JSON
@@ -28,7 +32,7 @@ function init(args)
     else
         # generate profile and save
         let port0 = 5678
-            global const profile = (String=>Any)[
+            global const profile = @compat Dict{AbstractString,Any}(
                 "ip" => "127.0.0.1",
                 "transport" => "tcp",
                 "stdin_port" => port0,
@@ -37,7 +41,7 @@ function init(args)
                 "shell_port" => port0+3,
                 "iopub_port" => port0+4,
                 "key" => uuid4()
-            ]
+            )
             fname = "profile-$(getpid()).json"
             println("connect ipython with --existing $(pwd())/$fname")
             open(fname, "w") do f
@@ -94,7 +98,11 @@ function init(args)
     global write_stderr
     read_stdin, write_stdin = redirect_stdin()
     read_stdout, write_stdout = redirect_stdout()
-    read_stderr, write_stderr = redirect_stderr()
+    if capture_stderr
+        read_stderr, write_stderr = redirect_stderr()
+    else
+        read_stderr, write_stderr = IOBuffer(), IOBuffer()
+    end
 
     send_status("starting")
     global inited = true
@@ -111,7 +119,7 @@ function eventloop(socket)
         while true
             msg = recv_ipython(socket)
             try
-                send_status("busy")
+                send_status("busy", msg.header)
                 handlers[msg.header["msg_type"]](socket, msg)
             catch e
                 # Try to keep going if we get an exception, but
@@ -124,14 +132,15 @@ function eventloop(socket)
                     send_ipython(publish, 
                                  execute_msg == nothing ?
                                  Msg([ "pyerr" ],
-                                     [ "msg_id" => uuid4(),
-                                     "username" => "jlkernel",
-                                     "session" => uuid4(),
-                                      "msg_type" => "pyerr" ], content) :
+                                     @compat(Dict("msg_id" => uuid4(),
+                                                  "username" => "jlkernel",
+                                                  "session" => uuid4(),
+                                                  "msg_type" => "pyerr")),
+                                     content) :
                                  msg_pub(execute_msg, "pyerr", content)) 
                 end
             finally
-                send_status("idle")
+                send_status("idle", msg.header)
             end
         end
     catch e

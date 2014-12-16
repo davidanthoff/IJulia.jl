@@ -12,21 +12,21 @@ const text_latex = MIME("text/latex") # IPython expects this
 const text_latex2 = MIME("application/x-latex") # but this is more standard?
 
 # backwards compatibility with old mimewritable API
-if method_exists(mimewritable, (String,Any))
+if method_exists(mimewritable, (AbstractString,Any))
     mimewritable_(mime, x) = mimewritable(mime, x)
 else
     mimewritable_(mime, x) = mimewritable(mime, typeof(x))
 end
 
-# return a String=>Any dictionary to attach as metadata
+# return a AbstractString=>Any dictionary to attach as metadata
 # in IPython display_data and pyout messages
 metadata(x) = Dict()
 
-# return a String=>String dictionary of mimetype=>data for passing to
+# return a AbstractString=>AbstractString dictionary of mimetype=>data for passing to
 # IPython display_data and pyout messages.
 function display_dict(x)
-    data = (ASCIIString=>ByteString)[ "text/plain" => 
-                                          sprint(writemime, "text/plain", x) ]
+    data = @compat Dict{ASCIIString,ByteString}("text/plain" => 
+                                        sprint(writemime, "text/plain", x))
     if mimewritable_(image_svg, x)
         data[string(image_svg)] = stringmime(image_svg, x)
     end
@@ -55,26 +55,33 @@ function undisplay(x)
     if i > 0
         splice!(displayqueue, i)
     end
+    return x
 end
 
 #######################################################################
 
 # return the content of a pyerr message for exception e
-function pyerr_content(e, msg::String="")
-    tb = map(utf8, split(sprint(Base.show_backtrace, :execute_request_0x535c5df2, 
-                      catch_backtrace(), 1:typemax(Int)), "\n", false))
+function pyerr_content(e, msg::AbstractString="")
+    tb = map(utf8, @compat(split(sprint(Base.show_backtrace, 
+                                        :execute_request_0x535c5df2, 
+                                        catch_backtrace(), 1:typemax(Int)),
+                                 "\n", keep=true)))
     if !isempty(tb) && ismatch(r"^\s*in\s+include_string\s+", tb[end])
         pop!(tb) # don't include include_string in backtrace
     end
     ename = string(typeof(e))
-    evalue = sprint(showerror, e)
+    evalue = try
+        sprint(showerror, e)
+    catch
+        "SYSTEM: show(lasterr) caused an error"
+    end
     unshift!(tb, evalue) # fperez says this needs to be in traceback too
     if !isempty(msg)
         unshift!(tb, msg)
     end
-    ["execution_count" => _n,
-     "ename" => ename, "evalue" => evalue,
-     "traceback" => tb]
+    @compat Dict("execution_count" => _n,
+                 "ename" => ename, "evalue" => evalue,
+                 "traceback" => tb)
 end
 
 #######################################################################
@@ -99,7 +106,7 @@ pop_posterror_hook(f::Function) = splice!(posterror_hooks, findfirst(posterror_h
 #######################################################################
 
 # global variable so that display can be done in the correct Msg context
-execute_msg = Msg(["julia"], ["username"=>"julia", "session"=>"????"], Dict())
+execute_msg = Msg(["julia"], @compat(Dict("username"=>"julia", "session"=>"????")), Dict())
 
 # note: 0x535c5df2 is a random integer to make name collisions in
 # backtrace analysis less likely.
@@ -119,8 +126,8 @@ function execute_request_0x535c5df2(socket, msg)
     end
     send_ipython(publish, 
                  msg_pub(msg, "pyin",
-                         ["execution_count" => _n,
-                          "code" => code]))
+                         @compat Dict("execution_count" => _n,
+                                      "code" => code)))
 
     # "; ..." cells are interpreted as shell commands for run
     code = replace(code, r"^\s*;.*$", 
@@ -153,7 +160,7 @@ function execute_request_0x535c5df2(socket, msg)
 
         user_variables = Dict()
         user_expressions = Dict()
-        for v in msg.content["user_variables"]
+        for v in get(msg.content, "user_variables", AbstractString[]) # gone in IPy3
             user_variables[v] = eval(Main,parse(v))
         end
         for (v,ex) in msg.content["user_expressions"]
@@ -166,38 +173,51 @@ function execute_request_0x535c5df2(socket, msg)
 
 	# flush pending stdio
         flush_cstdio() # flush writes to stdout/stderr by external C code
-	send_stream(takebuf_string(read_stdout.buffer), "stdout")
-	send_stream(takebuf_string(read_stderr.buffer), "stderr")
+        yield()
+        send_stream(read_stdout, "stdout")
+        send_stream(read_stderr, "stderr")
 
         undisplay(result) # dequeue if needed, since we display result in pyout
         display() # flush pending display requests
 
         if result != nothing
-            send_ipython(publish, 
+
+            # Work around for Julia issue #265 (see # #7884 for context)
+            # We have to explicitly invoke the correct metadata method.
+            result_metadata = invoke(metadata, (typeof(result),), result)
+
+            send_ipython(publish,
                          msg_pub(msg, "pyout",
-                                 ["execution_count" => _n,
-                                 "metadata" => metadata(result), # qtconsole needs this
-                                 "data" => display_dict(result) ]))
+                                 @compat Dict("execution_count" => _n,
+                                              "metadata" => result_metadata,
+                                              "data" => display_dict(result))))
+            
+            flush_cstdio() # flush writes to stdout/stderr by external C code
+            yield()
+            send_stream(read_stdout, "stdout")
+            send_stream(read_stderr, "stderr")
         end
         
         send_ipython(requests,
                      msg_reply(msg, "execute_reply",
-                               ["status" => "ok", "execution_count" => _n,
-                               "payload" => [],
-                               "user_variables" => user_variables,
-                                "user_expressions" => user_expressions]))
+                               @compat Dict("status" => "ok",
+                                            "execution_count" => _n,
+                                            "payload" => [],
+                                            "user_variables" => user_variables,
+                                            "user_expressions" => user_expressions)))
     catch e
-        empty!(displayqueue) # discard pending display requests on an error
         try
             # flush pending stdio
             flush_cstdio() # flush writes to stdout/stderr by external C code
-            send_stream(takebuf_string(read_stdout.buffer), "stdout")
-            send_stream(takebuf_string(read_stderr.buffer), "stderr")
+            yield()
+            send_stream(read_stdout, "stdout")
+            send_stream(read_stderr, "stderr")
             for hook in posterror_hooks
                 hook()
             end
         catch
         end
+        empty!(displayqueue) # discard pending display requests on an error
         content = pyerr_content(e)
         send_ipython(publish, msg_pub(msg, "pyerr", content))
         content["status"] = "error"
