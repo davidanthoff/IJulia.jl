@@ -1,18 +1,13 @@
 # return (ipython, version) tuple, where ipython is the string of the
 # IPython executable, and version is the VersionNumber.
 function find_ipython()
-    if @windows? true : false
-        ipycmds = (normpath(Pkg.dir("IJulia"),"deps", "usr", "python34", "scripts", "ipython.exe"),)
-    else
-        ipycmds = ("ipython", "ipython2", "ipython3")
-    end
+    ipycmds = ("ipython", "ipython2", "ipython3")
 
     for ipy in ipycmds
         try
             return (ipy, convert(VersionNumber, chomp(readall(`$ipy --version`))))
         end
     end
-    error("IPython is required for IJulia")
 end
 
 # set c.$s in prof file to val, or nothing if it is already set
