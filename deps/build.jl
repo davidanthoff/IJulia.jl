@@ -48,8 +48,12 @@ end
 include("ipython.jl")
 const ipython, ipyvers = find_ipython()
 
-if ipython==nothing && length(juliaprofiles)==0
-    error("IPython 1.0 or later is required for IJulia")
+if ipython==nothing
+    if length(juliaprofiles)==0
+        error("IPython 1.0 or later is required for IJulia")
+    else
+        eprintln("No system IPython found, using private IPython.")
+    end
 elseif ipyvers < v"1.0.0-dev"
     if length(juliaprofiles)==0
         error("IPython 1.0 or later is required for IJulia")
