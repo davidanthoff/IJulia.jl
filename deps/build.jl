@@ -13,8 +13,8 @@ if @windows? true : false
 
     if ispath(downloadsdir)
         run(`cmd /C RD "$(normpath(pwd(),downloadsdir))" /S /Q`)
-        mkdir(downloadsdir)
     end
+    mkdir(downloadsdir)
 
     minicondafilename = normpath(downloadsdir,"Miniconda3-3.7.0-Windows-x86.exe")
     getpipfilename = normpath(downloadsdir,"get-pip.py")
