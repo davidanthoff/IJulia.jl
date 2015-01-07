@@ -59,7 +59,7 @@ end
 CreateProcess(cmd) = begin
     si = STARTUPINFO[STARTUPINFO()]
     pi = PROCESS_INFORMATION[PROCESS_INFORMATION()]
-    ccall(:CreateProcessW, Cint,
+    ccall(:CreateProcessW, stdcall, Cint,
          (LPCTSTR, LPTSTR , Ptr{Int}, Ptr{Int}, Cint, DWORD,
           Ptr{Void}, LPCTSTR, Ptr{PROCESS_INFORMATION}, Ptr{STARTUPINFO}),
          C_NULL,
@@ -72,5 +72,5 @@ CreateProcess(cmd) = begin
          convert(Ptr{STARTUPINFO}, pointer(si)),
          convert(Ptr{PROCESS_INFORMATION}, pointer(pi)))
 
-    ccall(:WaitForSingleObject, Cuint, (Cuint,Cuint), pi[1].hProcess, INFINITE)
+    ccall(:WaitForSingleObject, stdcall, Cuint, (Cuint,Cuint), pi[1].hProcess, INFINITE)
 end
