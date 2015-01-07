@@ -25,8 +25,8 @@ if @windows? true : false
     if ispath(pyinstalldir)
         run(`cmd /C RD "$(normpath(pwd(),"usr"))" /S /Q`)
     end
-    #CreateProcess("$minicondafilename /AddToPath=0 /RegisterPython=0 /S /D=\"$pyinstalldir\"")
-    run(`$minicondafilename /AddToPath=0 /RegisterPython=0 /S /D=$pyinstalldir`)
+    CreateProcess("$minicondafilename /AddToPath=0 /RegisterPython=0 /S /D=$pyinstalldir")
+    #run(`$minicondafilename /AddToPath=0 /RegisterPython=0 /S /D=$pyinstalldir`)
 
     pythonexepath = normpath(pyinstalldir,"python.exe")
 
