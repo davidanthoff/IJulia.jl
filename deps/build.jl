@@ -1,4 +1,3 @@
-include("wincall.jl")
 # TODO: Build IPython 1.0 dependency? (wait for release?)
 
 #######################################################################
@@ -9,6 +8,7 @@ eprintln(x...) = println(STDERR, x...)
 juliaprofiles = Array(String,0)
 
 if @windows? true : false
+    include("wincall.jl")
     downloadsdir = "downloads"
     pyinstalldir = normpath(pwd(),"usr","python34")
 
@@ -22,7 +22,7 @@ if @windows? true : false
     download("http://repo.continuum.io/miniconda/Miniconda3-3.7.0-Windows-x86.exe", "$minicondafilename")
     download("https://bootstrap.pypa.io/get-pip.py", "$getpipfilename")
 
-    if ispath(pyinstalldir)
+    if ispath(normpath(pwd(),"usr"))
         run(`cmd /C RD "$(normpath(pwd(),"usr"))" /S /Q`)
     end
     CreateProcess("$minicondafilename /AddToPath=0 /RegisterPython=0 /S /D=$pyinstalldir")
