@@ -1,13 +1,15 @@
 const INFINITE = 0xFFFFFFFF
 
+typealias BOOL Cint
 typealias HANDLE Ptr{Void}
 typealias DWORD Culong
 typealias WORD Cushort
 typealias LPCTSTR Ptr{Cwchar_t}
 typealias LPTSTR Ptr{Cwchar_t}
 typealias LPBYTE Ptr{Cuchar}
-typealias MSIHANDLE Culong
- 
+typealias LPSECURITY_ATTRIBUTES Ptr{Int}
+typealias LPVOID Ptr{Void}
+
 immutable STARTUPINFO
     cb::DWORD
     lpReserved::LPTSTR
@@ -47,7 +49,9 @@ immutable STARTUPINFO
         C_NULL,
         C_NULL)
 end
- 
+
+typealias LPSTARTUPINFO Ptr{STARTUPINFO}
+
 immutable PROCESS_INFORMATION
     hProcess::HANDLE
     hThread::HANDLE
@@ -55,13 +59,15 @@ immutable PROCESS_INFORMATION
     dwThreadId::DWORD
     PROCESS_INFORMATION() = new(C_NULL,C_NULL,C_NULL,C_NULL)
 end
- 
-CreateProcess(cmd) = begin
+
+typealias LPPROCESS_INFORMATION Ptr{PROCESS_INFORMATION}
+
+function CreateProcess(cmd)
     si = STARTUPINFO[STARTUPINFO()]
     pi = PROCESS_INFORMATION[PROCESS_INFORMATION()]
-    ccall(:CreateProcessW, stdcall, Cint,
-         (LPCTSTR, LPTSTR , Ptr{Int}, Ptr{Int}, Cint, DWORD,
-          Ptr{Void}, LPCTSTR, Ptr{PROCESS_INFORMATION}, Ptr{STARTUPINFO}),
+    ret1 = ccall(:CreateProcessW, stdcall, BOOL,
+         (LPCTSTR, LPTSTR, LPSECURITY_ATTRIBUTES, LPSECURITY_ATTRIBUTES, BOOL, DWORD,
+          LPVOID, LPCTSTR, LPSTARTUPINFO, LPPROCESS_INFORMATION),
          C_NULL,
          wstring(cmd),
          C_NULL,
@@ -69,8 +75,10 @@ CreateProcess(cmd) = begin
          0,
          0,
          C_NULL, C_NULL,
-         convert(Ptr{STARTUPINFO}, pointer(si)),
-         convert(Ptr{PROCESS_INFORMATION}, pointer(pi)))
+         convert(LPSTARTUPINFO, pointer(si)),
+         convert(LPPROCESS_INFORMATION, pointer(pi)))
+    ret1 == 0 && error("CreateProcess call failed.")
 
-    ccall(:WaitForSingleObject, stdcall, Cuint, (Cuint,Cuint), pi[1].hProcess, INFINITE)
+    ret2 = ccall(:WaitForSingleObject, stdcall, DWORD, (HANDLE,DWORD), pi[1].hProcess, INFINITE)
+    ret2 != 0 && error("WaitForSingleObject call failed.")
 end
