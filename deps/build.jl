@@ -33,10 +33,7 @@ if @windows? true : false
     piplogfile = normpath(pwd(),"usr","logs","piplog.txt")
     mkdir(normpath(pwd(),"usr","logs"))
     run(`$pythonexepath $getpipfilename`)
-    run(`$pythonexepath -m pip install -qqq --log-file $piperrorlogfile --log $piplogfile pyzmq==14.4.1`)
-    run(`$pythonexepath -m pip install -qqq --log-file $piperrorlogfile --log $piplogfile Jinja2==2.7.3`)
-    run(`$pythonexepath -m pip install -qqq --log-file $piperrorlogfile --log $piplogfile tornado==4.0.2`)
-    run(`$pythonexepath -m pip install -qqq --log-file $piperrorlogfile --log $piplogfile ipython==2.3.1`)
+    run(`$pythonexepath -m pip install -qqq --log-file $piperrorlogfile --log $piplogfile ipython[notebook]==2.3.1`)
 
     ijuliaprofiledir = "$(pwd())\\usr\\.ijulia"
     ipythonexepath = "$pyinstalldir\\scripts\\ipython.exe"
