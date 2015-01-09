@@ -9,6 +9,7 @@ typealias LPTSTR Ptr{Cwchar_t}
 typealias LPBYTE Ptr{Cuchar}
 typealias LPSECURITY_ATTRIBUTES Ptr{Int}
 typealias LPVOID Ptr{Void}
+typealias MSIHANDLE Culong
 
 immutable STARTUPINFO
     cb::DWORD
