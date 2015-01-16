@@ -34,8 +34,8 @@ if @windows? true : false
     run(`$pythonexepath -m pip install -qqq --log-file $piperrorlogfile --log $piplogfile ipython[notebook]==2.3.1`)
 
     ijuliaprofiledir = "$(pwd())\\usr\\.ijulia"
-    ipythonexepath = "$pyinstalldir\\scripts\\ipython.exe"
-    run(`$ipythonexepath profile create --ipython-dir="$ijuliaprofiledir"`)
+    pythonexepath = "$pyinstalldir\\python.exe"
+    run(`$pythonexepath -m IPython profile create --ipython-dir="$ijuliaprofiledir"`)
 
     internaljuliaprof = chomp(readall(`$ipythonexepath locate profile --ipython-dir="$ijuliaprofiledir"`))
     push!(juliaprofiles, internaljuliaprof)
