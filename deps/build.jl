@@ -37,7 +37,7 @@ if @windows? true : false
     pythonexepath = "$pyinstalldir\\python.exe"
     run(`$pythonexepath -m IPython profile create --ipython-dir="$ijuliaprofiledir"`)
 
-    internaljuliaprof = chomp(readall(`$ipythonexepath locate profile --ipython-dir="$ijuliaprofiledir"`))
+    internaljuliaprof = chomp(readall(`$pythonexepath -m IPython locate profile --ipython-dir="$ijuliaprofiledir"`))
     push!(juliaprofiles, internaljuliaprof)
 end
 
