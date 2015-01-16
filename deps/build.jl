@@ -17,57 +17,20 @@ if @windows? true : false
     end
     mkdir(downloadsdir)
 
-    minicondafilename = normpath(downloadsdir,"Miniconda3-3.7.0-Windows-x86.exe")
-    pythonmsifilename = normpath(downloadsdir,"python-3.4.1.msi")
-    getpipfilename = normpath(downloadsdir,"get-pip.py")
-    #download("http://repo.continuum.io/miniconda/Miniconda3-3.7.0-Windows-x86.exe", "$minicondafilename")
-    download("https://www.python.org/ftp/python/3.4.1/python-3.4.1.msi", "$pythonmsifilename")
-    download("https://bootstrap.pypa.io/get-pip.py", "$getpipfilename")
+    pythonzipfilename = normpath(downloadsdir, "python-3.4.2.zip")
+    download("https://dl.dropboxusercontent.com/u/69735684/python-3.4.2.zip", "$pythonzipfilename")
 
     if ispath(normpath(pwd(),"usr"))
         run(`cmd /C RD "$(normpath(pwd(),"usr"))" /S /Q`)
     end
-    #CreateProcess("$minicondafilename /AddToPath=0 /RegisterPython=0 /S /D=$pyinstalldir")
-
-    const MSIDBOPEN_READONLY = 0
-    const MSIDBOPEN_TRANSACT = 1
-    const MSIDBOPEN_DIRECT = 2
-    const MSIDBOPEN_CREATE = 3
-    const MSIDBOPEN_CREATEDIRECT = 4
-
-    msiDatabaseHandle = MSIHANDLE[0]
-    retcode = ccall((:MsiOpenDatabaseW, "msi.dll"), stdcall, Cuint, (LPCTSTR, Cuint, Ptr{MSIHANDLE}), wstring(pythonmsifilename), MSIDBOPEN_TRANSACT, msiDatabaseHandle)
-    retcode!=0 && error("Error MsiOpenDatabaseW: $retcode")
-    try
-        msiViewHandle = MSIHANDLE[0]
-        retcode = ccall((:MsiDatabaseOpenViewW, "msi.dll"), stdcall, Cuint, (MSIHANDLE, LPCTSTR, Ptr{MSIHANDLE}), msiDatabaseHandle[1], wstring("UPDATE `Feature` SET `Feature`.`Level`=1 WHERE `Feature`.`Feature`='PrivateCRT'"), msiViewHandle)
-        retcode!=0 && error("Error MsiDatabaseOpenViewW")
-        try
-            retcode = ccall((:MsiViewExecute, "msi.dll"), stdcall, Cuint, (MSIHANDLE,Cuint), msiViewHandle[1],0)
-            retcode!=0 && error("Error MsiViewExecute")
-
-            retcode = ccall((:MsiViewClose, "msi.dll"), stdcall, Cuint, (MSIHANDLE, ), msiViewHandle[1])
-            retcode!=0 && error("Error MsiViewClose")
-
-            retcode = ccall((:MsiDatabaseCommit, "msi.dll"), stdcall, Cuint, (MSIHANDLE,), msiDatabaseHandle[1]);
-            retcode!=0 && error("Error MsiDatabaseCommit")
-        finally
-            retcode = ccall((:MsiCloseHandle, "msi.dll"), stdcall, Cuint, (MSIHANDLE,), msiViewHandle[1]);
-            retcode!=0 && error("Error MsiCloseHandle")
-        end
-    finally
-        retcode = ccall((:MsiCloseHandle, "msi.dll"), stdcall, Cuint, (MSIHANDLE,), msiDatabaseHandle[1]);
-        retcode!=0 && error("Error MsiCloseHandle")
-    end
-
-    CreateProcess("msiexec /passive /quiet /a $pythonmsifilename TARGETDIR=\"$pyinstalldir\"")
+    run(`7z x $pythonzipfilename -y -o$pyinstalldir`)
 
     pythonexepath = normpath(pyinstalldir,"python.exe")
 
     piperrorlogfile = normpath(pwd(),"usr","logs","piperrorlog.txt")
     piplogfile = normpath(pwd(),"usr","logs","piplog.txt")
     mkdir(normpath(pwd(),"usr","logs"))
-    run(`$pythonexepath $getpipfilename`)
+
     run(`$pythonexepath -m pip install -qqq --log-file $piperrorlogfile --log $piplogfile ipython[notebook]==2.3.1`)
 
     ijuliaprofiledir = "$(pwd())\\usr\\.ijulia"
