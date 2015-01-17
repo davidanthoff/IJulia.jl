@@ -176,9 +176,9 @@ function notebook(ipython=find_ipython()[1])
     inited && error("IJulia is already running")
 
     if @windows ? true : false
-        ipython = normpath(Pkg.dir("IJulia"),"deps", "usr", "python34", "scripts", "ipython.exe")
+        pythonexe = normpath(Pkg.dir("IJulia"),"deps", "usr", "python34", "python.exe")
         ijuliaprofiledir = "$(Pkg.dir("IJulia"))\\deps\\usr\\.ijulia"
-        run(`$ipython notebook --ipython-dir="$ijuliaprofiledir"`)
+        run(`$pythonexe -m IPython notebook --ipython-dir="$ijuliaprofiledir"`)
     else
         ipython[1]==nothing && error("IPython not found")
         run(`$ipython notebook --profile julia`)
