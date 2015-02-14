@@ -8,6 +8,7 @@ eprintln(x...) = println(STDERR, x...)
 juliaprofiles = Array(String,0)
 
 if @windows? true : false
+    using BinDeps
     downloadsdir = "downloads"
     pyinstalldir = normpath(pwd(),"usr","python34")
 
@@ -18,7 +19,7 @@ if @windows? true : false
 
     pythonzipfilename = normpath(downloadsdir, "python-3.4.2.zip")
     getpipfilename = normpath(downloadsdir,"get-pip.py")
-    download("https://dl.dropboxusercontent.com/u/69735684/python-3.4.2.zip", "$pythonzipfilename")
+    run(download_cmd("https://sourceforge.net/projects/minimalportablepython/files/python-3.4.2.zip", "$pythonzipfilename"))
     download("https://bootstrap.pypa.io/get-pip.py", "$getpipfilename")
 
     if ispath(normpath(pwd(),"usr"))
