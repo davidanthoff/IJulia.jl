@@ -18,7 +18,9 @@ if @windows? true : false
     mkdir(downloadsdir)
 
     pythonzipfilename = normpath(downloadsdir, "python-3.4.2.zip")
+    getpipfilename = normpath(downloadsdir,"get-pip.py")
     download("https://dl.dropboxusercontent.com/u/69735684/python-3.4.2.zip", "$pythonzipfilename")
+    download("https://bootstrap.pypa.io/get-pip.py", "$getpipfilename")
 
     if ispath(normpath(pwd(),"usr"))
         run(`cmd /C RD "$(normpath(pwd(),"usr"))" /S /Q`)
@@ -26,6 +28,8 @@ if @windows? true : false
     run(`7z x $pythonzipfilename -y -o$pyinstalldir`)
 
     pythonexepath = normpath(pyinstalldir,"python.exe")
+
+    run(`$pythonexepath $getpipfilename`)
 
     piperrorlogfile = normpath(pwd(),"usr","logs","piperrorlog.txt")
     piplogfile = normpath(pwd(),"usr","logs","piplog.txt")
