@@ -1,4 +1,3 @@
-include("wincall.jl")
 # TODO: Build IPython 1.0 dependency? (wait for release?)
 
 #######################################################################
