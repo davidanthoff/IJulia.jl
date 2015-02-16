@@ -7,7 +7,7 @@ eprintln(x...) = println(STDERR, x...)
 
 juliaprofiles = Array(String,0)
 
-if @windows? true : false
+@windows_only begin
     using BinDeps
     downloadsdir = "downloads"
     pyinstalldir = normpath(pwd(),"usr","python34")
