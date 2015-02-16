@@ -8,6 +8,8 @@ eprintln(x...) = println(STDERR, x...)
 juliaprofiles = Array(String,0)
 
 @windows_only begin
+    ipython_version_to_install = "2.3.1"
+
     existing_install_tag_filename = normpath(pwd(),"usr","python342-exists")
     downloadsdir = normpath(pwd(), "downloads")
     pythonzipfilename = normpath(pwd(), "downloads", "python-3.4.2.zip")
@@ -21,7 +23,7 @@ juliaprofiles = Array(String,0)
         rm(existing_install_tag_filename)
 
         run(`$pythonexepath -m pip install -U pip`)
-        run(`$pythonexepath -m pip install -U ipython[notebook]==2.3.1`)
+        run(`$pythonexepath -m pip install -U ipython[notebook]==$ipython_version_to_install`)
     else
         using BinDeps
 
@@ -42,7 +44,7 @@ juliaprofiles = Array(String,0)
         run(`$pythonexepath -m ensurepip`)
         run(`$pythonexepath -m pip install -U pip`)
 
-        run(`$pythonexepath -m pip install ipython[notebook]==2.3.1`)
+        run(`$pythonexepath -m pip install ipython[notebook]==$ipython_version_to_install`)
     end
 
     if ispath(ijuliaprofiledir)
