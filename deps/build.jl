@@ -28,11 +28,11 @@ juliaprofiles = Array(String,0)
         using BinDeps
 
         if ispath(downloadsdir)
-            run(`cmd /C RD "$downloadsdir" /S /Q`)
+            rm(downloadsdir, recursive=true)
         end
 
         if ispath(normpath(pwd(),"usr"))
-            run(`cmd /C RD "$(normpath(pwd(),"usr"))" /S /Q`)
+            rm(normpath(pwd(),"usr"), recursive=true)
         end
 
         mkdir(downloadsdir)
@@ -48,7 +48,7 @@ juliaprofiles = Array(String,0)
     end
 
     if ispath(ijuliaprofiledir)
-        run(`cmd /C RD "$ijuliaprofiledir" /S /Q`)
+        rm(ijuliaprofiledir, recursive=true)
     end
 
     run(`$pythonexepath -m IPython profile create --ipython-dir="$ijuliaprofiledir"`)
