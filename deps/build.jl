@@ -35,7 +35,7 @@ juliaprofiles = Array(String,0)
     piplogfile = normpath(pwd(),"usr","logs","piplog.txt")
     mkdir(normpath(pwd(),"usr","logs"))
 
-    run(`$pythonexepath -m pip install -qqq --log-file $piperrorlogfile --log $piplogfile ipython[notebook]==2.3.1`)
+    run(`$pythonexepath -m pip install --log-file $piperrorlogfile --log $piplogfile ipython[notebook]==2.3.1`)
 
     ijuliaprofiledir = "$(pwd())\\usr\\.ijulia"
     pythonexepath = "$pyinstalldir\\python.exe"
