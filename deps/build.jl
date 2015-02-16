@@ -8,39 +8,53 @@ eprintln(x...) = println(STDERR, x...)
 juliaprofiles = Array(String,0)
 
 @windows_only begin
-    using BinDeps
-    downloadsdir = "downloads"
+    existing_install_tag_filename = normpath(pwd(),"usr","python342-exists")
+    downloadsdir = normpath(pwd(), "downloads")
+    pythonzipfilename = normpath(pwd(), "downloads", "python-3.4.2.zip")
     pyinstalldir = normpath(pwd(),"usr","python34")
+    pythonexepath = normpath(pwd(),"usr","python34","python.exe")
+    ijuliaprofiledir = normpath(pwd(), "usr", ".ijulia")
 
-    if ispath(downloadsdir)
-        run(`cmd /C RD "$(normpath(pwd(),downloadsdir))" /S /Q`)
+    upgrade_private_python = ispath(existing_install_tag_filename)
+
+    if upgrade_private_python
+        rm(existing_install_tag_filename)
+
+        run(`$pythonexepath -m pip install -U pip`)
+        run(`$pythonexepath -m pip install -U ipython[notebook]==2.3.1`)
+    else
+        using BinDeps
+
+        if ispath(downloadsdir)
+            run(`cmd /C RD "$downloadsdir" /S /Q`)
+        end
+
+        if ispath(normpath(pwd(),"usr"))
+            run(`cmd /C RD "$(normpath(pwd(),"usr"))" /S /Q`)
+        end
+
+        mkdir(downloadsdir)
+
+        run(download_cmd("https://sourceforge.net/projects/minimalportablepython/files/python-3.4.2.zip", "$pythonzipfilename"))
+
+        run(`7z x $pythonzipfilename -y -o$pyinstalldir`)
+
+        run(`$pythonexepath -m ensurepip`)
+        run(`$pythonexepath -m pip install -U pip`)
+
+        run(`$pythonexepath -m pip install ipython[notebook]==2.3.1`)
     end
-    mkdir(downloadsdir)
 
-    pythonzipfilename = normpath(downloadsdir, "python-3.4.2.zip")
-    run(download_cmd("https://sourceforge.net/projects/minimalportablepython/files/python-3.4.2.zip", "$pythonzipfilename"))
-
-    if ispath(normpath(pwd(),"usr"))
-        run(`cmd /C RD "$(normpath(pwd(),"usr"))" /S /Q`)
+    if ispath(ijuliaprofiledir)
+        run(`cmd /C RD "$ijuliaprofiledir" /S /Q`)
     end
-    run(`7z x $pythonzipfilename -y -o$pyinstalldir`)
 
-    pythonexepath = normpath(pyinstalldir,"python.exe")
-
-    run(`$pythonexepath -m ensurepip`)
-
-    piperrorlogfile = normpath(pwd(),"usr","logs","piperrorlog.txt")
-    piplogfile = normpath(pwd(),"usr","logs","piplog.txt")
-    mkdir(normpath(pwd(),"usr","logs"))
-
-    run(`$pythonexepath -m pip install --log-file $piperrorlogfile --log $piplogfile ipython[notebook]==2.3.1`)
-
-    ijuliaprofiledir = "$(pwd())\\usr\\.ijulia"
-    pythonexepath = "$pyinstalldir\\python.exe"
     run(`$pythonexepath -m IPython profile create --ipython-dir="$ijuliaprofiledir"`)
 
     internaljuliaprof = chomp(readall(`$pythonexepath -m IPython locate profile --ipython-dir="$ijuliaprofiledir"`))
     push!(juliaprofiles, internaljuliaprof)
+
+    touch(existing_install_tag_filename)
 end
 
 include("ipython.jl")
