@@ -18,9 +18,7 @@ juliaprofiles = Array(String,0)
     mkdir(downloadsdir)
 
     pythonzipfilename = normpath(downloadsdir, "python-3.4.2.zip")
-    getpipfilename = normpath(downloadsdir,"get-pip.py")
     run(download_cmd("https://sourceforge.net/projects/minimalportablepython/files/python-3.4.2.zip", "$pythonzipfilename"))
-    download("https://bootstrap.pypa.io/get-pip.py", "$getpipfilename")
 
     if ispath(normpath(pwd(),"usr"))
         run(`cmd /C RD "$(normpath(pwd(),"usr"))" /S /Q`)
@@ -29,7 +27,7 @@ juliaprofiles = Array(String,0)
 
     pythonexepath = normpath(pyinstalldir,"python.exe")
 
-    run(`$pythonexepath $getpipfilename`)
+    run(`$pythonexepath -m ensurepip`)
 
     piperrorlogfile = normpath(pwd(),"usr","logs","piperrorlog.txt")
     piplogfile = normpath(pwd(),"usr","logs","piplog.txt")
