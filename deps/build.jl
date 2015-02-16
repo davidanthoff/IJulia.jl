@@ -8,7 +8,7 @@ eprintln(x...) = println(STDERR, x...)
 juliaprofiles = Array(String,0)
 
 @windows_only begin
-    ipython_version_to_install = "2.3.1"
+    ipython_version_to_install = "2.4.1"
 
     existing_install_tag_filename = normpath(pwd(),"usr","python342-exists")
     downloadsdir = normpath(pwd(), "downloads")
